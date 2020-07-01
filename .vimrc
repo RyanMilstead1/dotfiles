@@ -1,5 +1,5 @@
-"""""""""""""""""""""""""
-" Plugins
+"""""""""""""""""""""""""""
+Plugins
 """""""""""""""""""""""""""
 call plug#begin('~/.vim/plugged')
 
@@ -13,8 +13,6 @@ Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-surround'
 Plug 'itchyny/lightline.vim'
 Plug 'Yggdroot/indentLine'
-Plug 'jistr/vim-nerdtree-tabs'
-Plug 'scrooloose/nerdtree'
 Plug 'vim-ruby/vim-ruby'
 Plug 'ervandew/supertab'
 Plug 'posva/vim-vue'
@@ -27,15 +25,21 @@ Plug 'Chiel92/vim-autoformat'
 Plug '907th/vim-auto-save'
 Plug 'machakann/vim-highlightedyank'
 Plug 'ntpeters/vim-better-whitespace'
-Plug 'patstockwell/vim-monokai-tasty'
+Plug 'vim-syntastic/syntastic'
 
 call plug#end()
 """""""""""""""""""""""""""
 
-colo vim-monokai-tasty
+" No annoying sound on errors
+set noerrorbells
+set novisualbell
+set t_vb=
+set tm=500
 
-" disable bells
-autocmd! GUIEnter * set vb t_vb=
+" Properly disable sound on errors on MacVim
+if has("gui_macvim")
+    autocmd GUIEnter * set vb t_vb=
+endif
 
 " Do not make vim compatible with vi.
 set nocompatible
@@ -102,9 +106,11 @@ let g:indentLine_color_term=235
 let g:indentLine_char='┆'
 
 " Syntastic
-set statusline+=%#warningmsg#
-set statusline+=%{SyntasticStatuslineFlag()}
-set statusline+=%*
+if exists('SyntasticStatuslineFlag')
+  set statusline+=%#warningmsg#
+  set statusline+=%{SyntasticStatuslineFlag()}
+  set statusline+=%*
+endif
 
 let g:syntastic_always_populate_loc_list=1
 let g:syntastic_auto_loc_list=1
@@ -131,73 +137,6 @@ let loaded_bclose = 1
 if !exists('bclose_multiple')
 let bclose_multiple = 1
 endif
-
-" Display an error message.
-function! s:Warn(msg)
-  echohl ErrorMsg
-  echomsg a:msg
-  echohl NONE
-endfunction
-
-" Close buffer properly with NERDtree
-" http://stackoverflow.com/questions/1864394/vim-and-nerd-tree-closing-a-buffer-properly
-"
-" Command ':Bclose' executes ':bd' to delete buffer in current window.
-" The window will show the alternate buffer (Ctrl-^) if it exists,
-" or the previous buffer (:bp), or a blank buffer if no previous.
-" Command ':Bclose!' is the same, but executes ':bd!' (discard changes).
-" An optional argument can specify which buffer to close (name or number).
-function! s:Bclose(bang, buffer)
-if empty(a:buffer)
-let btarget = bufnr('%')
-elseif a:buffer =~ '^\d\+$'
-let btarget = bufnr(str2nr(a:buffer))
-else
-let btarget = bufnr(a:buffer)
-endif
-if btarget < 0
-call s:Warn('No matching buffer for '.a:buffer)
-return
-endif
-if empty(a:bang) && getbufvar(btarget, '&modified')
-call s:Warn('No write since last change for buffer '.btarget.' (use :Bclose!)')
-return
-endif
-" Numbers of windows that view target buffer which we will delete.
-let wnums = filter(range(1, winnr('$')), 'winbufnr(v:val) == btarget')
-if !g:bclose_multiple && len(wnums) > 1
-call s:Warn('Buffer is in multiple windows (use ":let bclose_multiple=1")')
-return
-endif
-let wcurrent = winnr()
-for w in wnums
-execute w.'wincmd w'
-let prevbuf = bufnr('#')
-if prevbuf > 0 && buflisted(prevbuf) && prevbuf != w
-buffer #
-else
-bprevious
-endif
-if btarget == bufnr('%') " Numbers of listed buffers which are not the target to be deleted.
-let blisted = filter(range(1, bufnr('$')), 'buflisted(v:val) && v:val !=
-btarget')
-" Listed, not target, and not displayed.
-let bhidden = filter(copy(blisted), 'bufwinnr(v:val) < 0')
-" Take the first buffer, if any (could be more intelligent).
-let bjump = (bhidden + blisted + [-1])[0]
-if bjump > 0
-execute 'buffer '.bjump
-else
-execute 'enew'.a:bang
-endif
-endif
-endfor
-execute 'bdelete'.a:bang.' '.btarget
-execute wcurrent.'wincmd w'
-endfunction
-command! -bang -complete=buffer -nargs=? Bclose call <SID>Bclose('<bang>','<args>')
-nnoremap <silent> <Leader>bd :Bclose<CR>
-nnoremap <silent> <Leader>bD :Bclose!<CR>
 
 " Chain vimgrep and copen
 augroup qf
@@ -236,6 +175,15 @@ endfunction
 """"""""""""""""""""""""""
 " Custom bindings
 """"""""""""""""""""""""""
+let mapleader = ","
+
+" Set 7 lines to the cursor - when moving vertically using j/k
+set so=7
+
+" Show matching brackets when text indicator is over them
+set showmatch
+" How many tenths of a second to blink when matching brackets
+set mat=2
 
 " Browse airline tabs
 :nnoremap <C-p> :bnext<CR>
@@ -252,9 +200,6 @@ vnoremap <silent> <C-k> :Commentary<cr>
 " Close current buffer
 noremap <silent> <C-q> :Bclose!<CR>
 
-" Toggle Nerdtree
-noremap <silent> <C-f> ::NERDTreeToggle<CR>
-
 " Select all
 map <C-a> <esc>ggVG<CR>
 
@@ -269,3 +214,15 @@ noremap <Right> <Nop>
 
 nmap // :BLines!<CR>
 nmap ?? :Rg!<CR>
+
+" remap ESC to exit terminal mode (breaks fzf popup)
+tnoremap <Esc> <C-\><C-n>
+
+""""""""""""""""""""""""""""""
+" => Visual mode related
+""""""""""""""""""""""""""""""
+" Visual mode pressing * or # searches for the current selection
+" Super useful! From an idea by Michael Naumann
+vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
+vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
+
