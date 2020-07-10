@@ -1,5 +1,5 @@
 """""""""""""""""""""""""""
-Plugins
+" Plugins
 """""""""""""""""""""""""""
 call plug#begin('~/.vim/plugged')
 
@@ -26,9 +26,13 @@ Plug '907th/vim-auto-save'
 Plug 'machakann/vim-highlightedyank'
 Plug 'ntpeters/vim-better-whitespace'
 Plug 'vim-syntastic/syntastic'
+Plug 'danilo-augusto/vim-afterglow'
 
 call plug#end()
 """""""""""""""""""""""""""
+
+colorscheme afterglow
+let g:afterglow_inherit_background=1
 
 " No annoying sound on errors
 set noerrorbells
@@ -86,19 +90,16 @@ set ttyfast
 set lazyredraw
 
 " Theme
-set background=dark
 if exists('+termguicolors')
 set termguicolors
 endif
-colorscheme quantum
-set guifont=DejaVu\ Sans\ Mono\ for\ Powerline:h14
 
 " Airline
 set laststatus=2
-let g:airline#extensions#tabline#enabled=1
-let g:airline_theme='bubblegum'
+let g:airline_theme='afterglow'
 let g:airline_powerline_fonts=1
 let g:airline#extensions#branch#enabled=1
+let g:airline#extensions#tabline#enabled=1
 
 " Indent Guides
 let g:indentLine_enabled=1
@@ -112,11 +113,14 @@ if exists('SyntasticStatuslineFlag')
   set statusline+=%*
 endif
 
-let g:syntastic_always_populate_loc_list=1
-let g:syntastic_auto_loc_list=1
-let g:syntastic_check_on_open=1
-let g:syntastic_check_on_wq=0
-
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+let g:syntastic_ruby_checkers = ['rubocop', 'mri']
+let g:syntastic_ruby_rubocop_exec = system("asdf which rubocop")
+let g:syntastic_sql_checkers = ['sqlint']
+let g:syntastic_sql_sqlint_exec = system("asdf which sqlint")
 let g:auto_save = 1
 
 let g:better_whitespace_enabled=1
@@ -125,52 +129,6 @@ let g:strip_whitespace_on_save=1
 " Autoformatter python location
 let g:python3_host_prog='/usr/local/bin/python3'
 
-" Start Minimap
-" autocmd VimEnter * Minimap
-
-" Delete buffer while keeping window layout (don't close buffer's windows).
-" Version 2008-11-18 from http://vim.wikia.com/wiki/VimTip165
-if v:version < 700 || exists('loaded_bclose') || &cp
-finish
-endif
-let loaded_bclose = 1
-if !exists('bclose_multiple')
-let bclose_multiple = 1
-endif
-
-" Chain vimgrep and copen
-augroup qf
-    autocmd!
-    autocmd QuickFixCmdPost [^l]* cwindow
-    autocmd QuickFixCmdPost l*    cwindow
-    autocmd VimEnter        *     cwindow
-augroup END
-
-" Change cursor appearance depending on the current mode
-let &t_SI = "\<Esc>]50;CursorShape=1\x7"
-let &t_SR = "\<Esc>]50;CursorShape=2\x7"
-let &t_EI = "\<Esc>]50;CursorShape=0\x7"
-
-" This is handled by lightline
-set noshowmode
-
-" Show file path in lightline
-" https://github.com/itchyny/lightline.vim/issues/87#issuecomment-119130738
-let g:lightline = {
-  \ 'colorscheme': 'darcula',
-  \ 'active': {
-  \   'right': [['lineinfo'], ['fileformat', 'filetype']]
-  \ },
-  \ 'component_function': {
-  \   'filename': 'LightLineFilename'
-  \ },
-  \ 'component': {
-  \   'lineinfo': "[%l:%-v] [%{printf('%03d/%03d',line('.'),line('$'))}]",
-  \ }
-  \ }
-function! LightLineFilename()
-  return expand('%')
-endfunction
 
 """"""""""""""""""""""""""
 " Custom bindings

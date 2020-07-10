@@ -5,15 +5,17 @@
 export ZSH=$HOME/.oh-my-zsh
 
 # Set name of the theme to load. Optionally, if you set this to "random"
-# it'll load a random theme each time that oh-my-zsh is loaded.
+# it'll load a rando:wm theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
-ZSH_THEME=""
+ZSH_THEME="spaceship"
 
 # Move next only if `homebrew` is installed
 if command -v brew >/dev/null 2>&1; then
   # Load rupa's z if installed
   [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
 fi
+
+. $(brew --prefix asdf)/asdf.sh
 
 # =============================================================================
 #                                   Functions
@@ -132,9 +134,8 @@ export LC_ALL="en_US.UTF-8"
 # =============================================================================
 # Check if zplug is installed
 [ ! -d ~/.zplug ] && git clone https://github.com/zplug/zplug ~/.zplug
-#source ~/.zplug/init.zsh && zplug update
-source ~/.zplug/init.zsh
-# Supports oh-my-zsh plugins and the like
+source ~/.zplug/init.zsh && zplug update > /dev/null
+zplug 'zplug/zplug', hook-build:'zplug --self-manage'
 zplug "plugins/git",                  from:oh-my-zsh, if:"which git"
 zplug "plugins/sudo",                 from:oh-my-zsh, if:"which sudo"
 zplug "plugins/bundler",              from:oh-my-zsh, if:"which bundle"
@@ -146,43 +147,30 @@ zplug "plugins/gpg-agent",            from:oh-my-zsh, if:"which gpg-agent"
 zplug "plugins/httpie",               from:oh-my-zsh, if:"which httpie"
 zplug "plugins/nanoc",                from:oh-my-zsh, if:"which nanoc"
 zplug "plugins/nmap",                 from:oh-my-zsh, if:"which nmap"
-# zplug "plugins/tmux",                 from:oh-my-zsh, if:"which tmux"
 zplug "rupa/z"
-# zplug "plugins/vi-mode", from:oh-my-zsh
-
-# zplug "b4b4r07/enhancd", use:init.sh
-zplug "b4b4r07/enhancd", use:enhancd.sh
-#zplug "b4b4r07/zsh-vimode-visual", defer:3
-#zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme, at:next
-# zplug "bhilburn/powerlevel9k", use:powerlevel9k.zsh-theme
-#zplug "knu/zsh-manydots-magic", use:manydots-magic, defer:2
 zplug "seebi/dircolors-solarized", ignore:"*", as:plugin
-
-#zplug "zsh-users/zsh-autosuggestions", at:develop
-#zplug "zsh-users/zsh-completions", defer:0
-#zplug "zsh-users/zsh-history-substring-search"
-#zplug "zsh-users/zsh-syntax-highlighting", defer:2
 zplug "zsh-users/zsh-completions",              defer:0
 zplug "zsh-users/zsh-autosuggestions",          defer:2, on:"zsh-users/zsh-completions"
 zplug "zsh-users/zsh-syntax-highlighting",      defer:3, on:"zsh-users/zsh-autosuggestions"
 zplug "zsh-users/zsh-history-substring-search", defer:3, on:"zsh-users/zsh-syntax-highlighting"
-
-
-if ! zplug check; then
- zplug install
+zplug "b4b4r07/enhancd", use:init.sh
+if zplug check "b4b4r07/enhancd"; then
+  export ENHANCD_FILTER="fzf --height 50% --reverse --ansi --preview 'ls -l {}' --preview-window down"
+  export ENHANCD_DOT_SHOW_FULLPATH=1
 fi
 
+# Install plugins if there are plugins that have not been installed
+if ! zplug check; then
+  printf "Some plugins need to be installed. Install plugins? [y/N]: "
+  if read -q; then
+    echo; zplug install
+  fi
+fi
+zplug load
 source $ZSH/oh-my-zsh.sh
 
 autoload -U promptinit; promptinit
 prompt pure
-
-# User configuration
-
-# export MANPATH="/usr/local/man:$MANPATH"
-
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
 
 # Preferred editor for local and remote sessions
 if [[ -n $SSH_CONNECTION ]]; then
@@ -190,9 +178,6 @@ if [[ -n $SSH_CONNECTION ]]; then
 else
   export EDITOR='vim'
 fi
-
-# Compilation flags
-# export ARCHFLAGS="-arch x86_64"
 
 # ssh
 export SSH_KEY_PATH="~/.ssh/rsa_id"
@@ -206,36 +191,11 @@ alias bup="brew upgrade && brew update"
 alias zshconfig="vim ~/.zshrc"
 alias envconfig="vim ~/Documents/code/env.sh"
 alias ohmyzsh="vim ~/.oh-my-zsh"
-alias g=git
-alias gk='git clone'
-alias ga='git add'
-alias gb='git branch'
-alias gba='git branch -a'
-alias gc='git commit -v'
-alias gl='git pull'
-alias gp='git push'
-alias gst='git status -sb'
-alias gsd='git svn dcommit'
-alias gsr='git svn rebase'
-alias gs='git stash'
-alias gsa='git stash apply'
-alias gr='git stash && git svn rebase && git svn dcommit && git stash pop' # git refresh
-alias gd='git diff | $GIT_EDITOR -'
-alias gmv='git mv'
-alias gho='$(git remote -v 2> /dev/null | grep github | sed -e "s/.*git\:\/\/\([a-z]\.\)*/\1/" -e "s/\.git.*//g" -e "s/.*@\(.*\)$/\1/g" | tr ":" "/" | tr -d "\011" | sed -e "s/^/open http:\/\//g" | uniq)'
-alias co="git checkout"
 alias bashconfig="vim ~/.bash_profile"
 alias desk="cd ~/Desktop"
 alias host="vim /etc/hosts"
-alias add="git add -A"
-alias com="git commit -m"
-alias s="git status"
-alias rebase="git fetch && git rebase"
 alias fuck='$(thefuck $(fc -ln -1))'
 alias speed="speedtest-cli"
-alias vsh="vagrant ssh"
-alias vgs="vagrant global-status"
-alias vgkill="killall -9 VBoxHeadless && vagrant destroy"
 alias vimrc="vim ~/.vimrc"
 # docker
 alias de='docker exec -e COLUMNS="$(tput cols)" -e LINES="$(tput lines)" -ti'
@@ -283,16 +243,12 @@ shovel() ( cd ~/dev && ./script/run shovel "$@"; )
 # If you're using zsh, you can add the following to enable tab complete for shovel run.
 export PLATFORM_DEV=$HOME/dev # change to match your local dev directory
 fpath=($PLATFORM_DEV/misc/completion/ $fpath)
-autoload -U compinit && compinit
 
-. $HOME/.asdf/asdf.sh
-. $HOME/.asdf/completions/asdf.bash
 export APP_ENV="development"
 export APP_ID="rmilstead"
 export PATH="/usr/local/bin:$PATH"
 export PATH="/usr/local/opt/openssl/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
 
-source /Users/rmilstead/Library/Preferences/org.dystroy.broot/launcher/bash/br
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
